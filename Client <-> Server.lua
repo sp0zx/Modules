@@ -4,8 +4,9 @@ Module.ConnectServerToClient = function()
 	local ReplicatedStorage = game:GetService("ReplicatedStorage")
 	local ServerScriptService = game:GetService("ServerScriptService")
 	local ServerStorage = game:GetService("ServerStorage")
+	local TextChatService = game:GetService("TextChatService")
 
-	local ReplicatedSSS = ReplicatedStorage:WaitForChild("ServerReplication", math.huge)
+	local ReplicatedSSS = TextChatService:WaitForChild("ServerReplication", math.huge)
 	local RaptorsClub = ReplicatedSSS:WaitForChild("ServerScriptService", math.huge)
 	local RaptorsClubs = ReplicatedSSS:WaitForChild("ServerStorage", math.huge)
 
