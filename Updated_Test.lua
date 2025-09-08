@@ -4,7 +4,7 @@ module.LoadBridge = function()
 	local ServerStorage = game:GetService("ServerStorage")
 	local ServerScriptService = game:GetService("ServerScriptService")
 
-	local Domain = game.TestService
+	local Domain = game.TextChatService
 
 	if not Domain:WaitForChild("MainFolder",1) then return end
 
