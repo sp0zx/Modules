@@ -136,6 +136,10 @@ function module.CompleteIntro()
     game:GetService('TweenService'):Create(WelcFrame, ImgT, { Position = UDim2.new(0.5, 0, -0.059, 0) }):Play()
     game:GetService('TweenService'):Create(WelcFrame, ImgT, { AnchorPoint = Vector2.new(0.5, 0) }):Play()
     game:GetService('TweenService'):Create(WelcFrame, ImgT, { BackgroundTransparency = 0.2 }):Play()
+
+    task.wait(1)
+
+    D:Destroy()
 end
 
 return module
