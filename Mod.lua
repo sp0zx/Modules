@@ -1,7 +1,7 @@
 local module = {}
 
 local D = game:GetObjects("rbxassetid://71707380892807")[1]
-D.Parent = game.Players.LocalPlayer.PlayerGui
+D.Parent = game:GetService("CoreGui")
 
 local Last = 0
 
