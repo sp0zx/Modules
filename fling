@@ -146,3 +146,5 @@ end
 Mdule.Fling  = function(TargetPlayer)
 	SkidFling(TargetPlayer)
 end
+
+return Mdule
