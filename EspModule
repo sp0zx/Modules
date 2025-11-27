@@ -1,0 +1,328 @@
+-- ReplicatedStorage/SkeletonESP
+local SkeletonESP = {}
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+
+local active = false
+local playerData = {} -- [Player] = {limbs = {}, conn = RBXScriptConnection}
+local playerAddedConn = nil
+
+-- Helpers
+local function newLine()
+    local l = Drawing.new("Line")
+    l.Visible = false
+    l.From = Vector2.new(0, 0)
+    l.To = Vector2.new(1, 1)
+    l.Color = Color3.fromRGB(255, 255, 255)
+    l.Thickness = 1
+    l.Transparency = 1
+    return l
+end
+
+local function setVisibility(limbs, state)
+    for _, line in pairs(limbs) do
+        line.Visible = state
+    end
+end
+
+local function setColor(limbs, color)
+    for _, line in pairs(limbs) do
+        line.Color = color
+    end
+end
+
+-- R15 updater (returns connection)
+local function attachR15Updater(plr, limbs)
+    return RunService.RenderStepped:Connect(function()
+        local char = plr.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+        if char and hum and root and hum.Health > 0 then
+            local _, vis = Camera:WorldToViewportPoint(root.Position)
+            if vis then
+                local H = Camera:WorldToViewportPoint(char.Head.Position)
+                if limbs.Head_UpperTorso.From ~= Vector2.new(H.X, H.Y) then
+                    local UT = Camera:WorldToViewportPoint(char.UpperTorso.Position)
+                    local LT = Camera:WorldToViewportPoint(char.LowerTorso.Position)
+
+                    local LUA = Camera:WorldToViewportPoint(char.LeftUpperArm.Position)
+                    local LLA = Camera:WorldToViewportPoint(char.LeftLowerArm.Position)
+                    local LH  = Camera:WorldToViewportPoint(char.LeftHand.Position)
+
+                    local RUA = Camera:WorldToViewportPoint(char.RightUpperArm.Position)
+                    local RLA = Camera:WorldToViewportPoint(char.RightLowerArm.Position)
+                    local RH  = Camera:WorldToViewportPoint(char.RightHand.Position)
+
+                    local LUL = Camera:WorldToViewportPoint(char.LeftUpperLeg.Position)
+                    local LLL = Camera:WorldToViewportPoint(char.LeftLowerLeg.Position)
+                    local LF  = Camera:WorldToViewportPoint(char.LeftFoot.Position)
+
+                    local RUL = Camera:WorldToViewportPoint(char.RightUpperLeg.Position)
+                    local RLL = Camera:WorldToViewportPoint(char.RightLowerLeg.Position)
+                    local RF  = Camera:WorldToViewportPoint(char.RightFoot.Position)
+
+                    -- Head → UpperTorso
+                    limbs.Head_UpperTorso.From = Vector2.new(H.X, H.Y)
+                    limbs.Head_UpperTorso.To   = Vector2.new(UT.X, UT.Y)
+
+                    -- UpperTorso → LowerTorso
+                    limbs.UpperTorso_LowerTorso.From = Vector2.new(UT.X, UT.Y)
+                    limbs.UpperTorso_LowerTorso.To   = Vector2.new(LT.X, LT.Y)
+
+                    -- Left arm chain
+                    limbs.UpperTorso_LeftUpperArm.From = Vector2.new(UT.X, UT.Y)
+                    limbs.UpperTorso_LeftUpperArm.To   = Vector2.new(LUA.X, LUA.Y)
+
+                    limbs.LeftUpperArm_LeftLowerArm.From = Vector2.new(LUA.X, LUA.Y)
+                    limbs.LeftUpperArm_LeftLowerArm.To   = Vector2.new(LLA.X, LLA.Y)
+
+                    limbs.LeftLowerArm_LeftHand.From = Vector2.new(LLA.X, LLA.Y)
+                    limbs.LeftLowerArm_LeftHand.To   = Vector2.new(LH.X, LH.Y)
+
+                    -- Right arm chain
+                    limbs.UpperTorso_RightUpperArm.From = Vector2.new(UT.X, UT.Y)
+                    limbs.UpperTorso_RightUpperArm.To   = Vector2.new(RUA.X, RUA.Y)
+
+                    limbs.RightUpperArm_RightLowerArm.From = Vector2.new(RUA.X, RUA.Y)
+                    limbs.RightUpperArm_RightLowerArm.To   = Vector2.new(RLA.X, RLA.Y)
+
+                    limbs.RightLowerArm_RightHand.From = Vector2.new(RLA.X, RLA.Y)
+                    limbs.RightLowerArm_RightHand.To   = Vector2.new(RH.X, RH.Y)
+
+                    -- Left leg chain
+                    limbs.LowerTorso_LeftUpperLeg.From = Vector2.new(LT.X, LT.Y)
+                    limbs.LowerTorso_LeftUpperLeg.To   = Vector2.new(LUL.X, LUL.Y)
+
+                    limbs.LeftUpperLeg_LeftLowerLeg.From = Vector2.new(LUL.X, LUL.Y)
+                    limbs.LeftUpperLeg_LeftLowerLeg.To   = Vector2.new(LLL.X, LLL.Y)
+
+                    limbs.LeftLowerLeg_LeftFoot.From = Vector2.new(LLL.X, LLL.Y)
+                    limbs.LeftLowerLeg_LeftFoot.To   = Vector2.new(LF.X, LF.Y)
+
+                    -- Right leg chain
+                    limbs.LowerTorso_RightUpperLeg.From = Vector2.new(LT.X, LT.Y)
+                    limbs.LowerTorso_RightUpperLeg.To   = Vector2.new(RUL.X, RUL.Y)
+
+                    limbs.RightUpperLeg_RightLowerLeg.From = Vector2.new(RUL.X, RUL.Y)
+                    limbs.RightUpperLeg_RightLowerLeg.To   = Vector2.new(RLL.X, RLL.Y)
+
+                    limbs.RightLowerLeg_RightFoot.From = Vector2.new(RLL.X, RLL.Y)
+                    limbs.RightLowerLeg_RightFoot.To   = Vector2.new(RF.X, RF.Y)
+                end
+
+                if not limbs.Head_UpperTorso.Visible then
+                    setVisibility(limbs, true)
+                end
+            else
+                if limbs.Head_UpperTorso.Visible then
+                    setVisibility(limbs, false)
+                end
+            end
+        else
+            if limbs.Head_UpperTorso.Visible then
+                setVisibility(limbs, false)
+            end
+            if not Players:FindFirstChild(plr.Name) then
+                for _, v in pairs(limbs) do v:Remove() end
+                playerData[plr] = nil
+            end
+        end
+    end)
+end
+
+-- R6 updater (returns connection)
+local function attachR6Updater(plr, limbs)
+    return RunService.RenderStepped:Connect(function()
+        local char = plr.Character
+        local hum = char and char:FindFirstChild("Humanoid")
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+
+        if char and hum and root and hum.Health > 0 then
+            local _, vis = Camera:WorldToViewportPoint(root.Position)
+            if vis then
+                local H = Camera:WorldToViewportPoint(char.Head.Position)
+                if limbs.Head_Spine.From ~= Vector2.new(H.X, H.Y) then
+                    local T = char:FindFirstChild("Torso")
+                    local LA = char:FindFirstChild("Left Arm")
+                    local RA = char:FindFirstChild("Right Arm")
+                    local LL = char:FindFirstChild("Left Leg")
+                    local RL = char:FindFirstChild("Right Leg")
+                    if not (T and LA and RA and LL and RL) then
+                        setVisibility(limbs, false)
+                        return
+                    end
+
+                    local T_H = T.Size.Y/2 - 0.2
+                    local UT = Camera:WorldToViewportPoint((T.CFrame * CFrame.new(0, T_H, 0)).p)
+                    local LT = Camera:WorldToViewportPoint((T.CFrame * CFrame.new(0, -T_H, 0)).p)
+
+                    local LA_H = LA.Size.Y/2 - 0.2
+                    local LUA = Camera:WorldToViewportPoint((LA.CFrame * CFrame.new(0, LA_H, 0)).p)
+                    local LLA = Camera:WorldToViewportPoint((LA.CFrame * CFrame.new(0, -LA_H, 0)).p)
+
+                    local RA_H = RA.Size.Y/2 - 0.2
+                    local RUA = Camera:WorldToViewportPoint((RA.CFrame * CFrame.new(0, RA_H, 0)).p)
+                    local RLA = Camera:WorldToViewportPoint((RA.CFrame * CFrame.new(0, -RA_H, 0)).p)
+
+                    local LL_H = LL.Size.Y/2 - 0.2
+                    local LUL = Camera:WorldToViewportPoint((LL.CFrame * CFrame.new(0, LL_H, 0)).p)
+                    local LLL = Camera:WorldToViewportPoint((LL.CFrame * CFrame.new(0, -LL_H, 0)).p)
+
+                    local RL_H = RL.Size.Y/2 - 0.2
+                    local RUL = Camera:WorldToViewportPoint((RL.CFrame * CFrame.new(0, RL_H, 0)).p)
+                    local RLL = Camera:WorldToViewportPoint((RL.CFrame * CFrame.new(0, -RL_H, 0)).p)
+
+                    -- Head -> Upper torso
+                    limbs.Head_Spine.From = Vector2.new(H.X, H.Y)
+                    limbs.Head_Spine.To   = Vector2.new(UT.X, UT.Y)
+
+                    -- Spine
+                    limbs.Spine.From = Vector2.new(UT.X, UT.Y)
+                    limbs.Spine.To   = Vector2.new(LT.X, LT.Y)
+
+                    -- Left arm
+                    limbs.LeftArm.From = Vector2.new(LUA.X, LUA.Y)
+                    limbs.LeftArm.To   = Vector2.new(LLA.X, LLA.Y)
+
+                    limbs.LeftArm_UpperTorso.From = Vector2.new(UT.X, UT.Y)
+                    limbs.LeftArm_UpperTorso.To   = Vector2.new(LUA.X, LUA.Y)
+
+                    -- Right arm
+                    limbs.RightArm.From = Vector2.new(RUA.X, RUA.Y)
+                    limbs.RightArm.To   = Vector2.new(RLA.X, RLA.Y)
+
+                    limbs.RightArm_UpperTorso.From = Vector2.new(UT.X, UT.Y)
+                    limbs.RightArm_UpperTorso.To   = Vector2.new(RUA.X, RUA.Y)
+
+                    -- Left leg
+                    limbs.LeftLeg.From = Vector2.new(LUL.X, LUL.Y)
+                    limbs.LeftLeg.To   = Vector2.new(LLL.X, LLL.Y)
+
+                    limbs.LeftLeg_LowerTorso.From = Vector2.new(LT.X, LT.Y)
+                    limbs.LeftLeg_LowerTorso.To   = Vector2.new(LUL.X, LUL.Y)
+
+                    -- Right leg
+                    limbs.RightLeg.From = Vector2.new(RUL.X, RUL.Y)
+                    limbs.RightLeg.To   = Vector2.new(RLL.X, RLL.Y)
+
+                    limbs.RightLeg_LowerTorso.From = Vector2.new(LT.X, LT.Y)
+                    limbs.RightLeg_LowerTorso.To   = Vector2.new(RUL.X, RUL.Y)
+                end
+
+                if not limbs.Head_Spine.Visible then
+                    setVisibility(limbs, true)
+                end
+            else
+                if limbs.Head_Spine.Visible then
+                    setVisibility(limbs, false)
+                end
+            end
+        else
+            if limbs.Head_Spine.Visible then
+                setVisibility(limbs, false)
+            end
+            if not Players:FindFirstChild(plr.Name) then
+                for _, v in pairs(limbs) do v:Remove() end
+                playerData[plr] = nil
+            end
+        end
+    end)
+end
+
+local function buildLimbsR15()
+    return {
+        Head_UpperTorso = newLine(),
+        UpperTorso_LowerTorso = newLine(),
+        UpperTorso_LeftUpperArm = newLine(),
+        LeftUpperArm_LeftLowerArm = newLine(),
+        LeftLowerArm_LeftHand = newLine(),
+        UpperTorso_RightUpperArm = newLine(),
+        RightUpperArm_RightLowerArm = newLine(),
+        RightLowerArm_RightHand = newLine(),
+        LowerTorso_LeftUpperLeg = newLine(),
+        LeftUpperLeg_LeftLowerLeg = newLine(),
+        LeftLowerLeg_LeftFoot = newLine(),
+        LowerTorso_RightUpperLeg = newLine(),
+        RightUpperLeg_RightLowerLeg = newLine(),
+        RightLowerLeg_RightFoot = newLine(),
+    }
+end
+
+local function buildLimbsR6()
+    return {
+        Head_Spine = newLine(),
+        Spine = newLine(),
+        LeftArm = newLine(),
+        LeftArm_UpperTorso = newLine(),
+        RightArm = newLine(),
+        RightArm_UpperTorso = newLine(),
+        LeftLeg = newLine(),
+        LeftLeg_LowerTorso = newLine(),
+        RightLeg = newLine(),
+        RightLeg_LowerTorso = newLine(),
+    }
+end
+
+local function attachPlayer(plr)
+    if plr == LocalPlayer or playerData[plr] then return end
+
+    -- Wait for character/humanoid
+    task.spawn(function()
+        repeat task.wait() until plr.Character and plr.Character:FindFirstChild("Humanoid")
+        local hum = plr.Character:FindFirstChild("Humanoid")
+        if not hum then return end
+
+        local isR15 = (hum.RigType == Enum.HumanoidRigType.R15)
+        local limbs = isR15 and buildLimbsR15() or buildLimbsR6()
+        local conn = isR15 and attachR15Updater(plr, limbs) or attachR6Updater(plr, limbs)
+
+        playerData[plr] = {limbs = limbs, conn = conn}
+    end)
+end
+
+local function detachAll()
+    if playerAddedConn then
+        playerAddedConn:Disconnect()
+        playerAddedConn = nil
+    end
+    for plr, data in pairs(playerData) do
+        if data.conn then data.conn:Disconnect() end
+        if data.limbs then
+            for _, line in pairs(data.limbs) do
+                line:Remove()
+            end
+        end
+        playerData[plr] = nil
+    end
+end
+
+-- Public API
+function SkeletonESP:Toggle(state)
+    if state == active then return end
+    active = state
+
+    if active then
+        for _, p in ipairs(Players:GetPlayers()) do
+            attachPlayer(p)
+        end
+        playerAddedConn = Players.PlayerAdded:Connect(function(p)
+            if active then attachPlayer(p) end
+        end)
+    else
+        detachAll()
+    end
+end
+
+function SkeletonESP:Colorize(color)
+    for _, data in pairs(playerData) do
+        if data.limbs then
+            setColor(data.limbs, color)
+        end
+    end
+end
+
+return SkeletonESP
