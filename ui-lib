@@ -446,7 +446,7 @@ function UILibrary.Load(GUITitle)
 
 			local DropdownForeground = RoundBox(5)
 			DropdownForeground.ClipsDescendants = true
-			DropdownForeground.ImageColor3 = Color3.fromRGB(35,35,35)
+			DropdownForeground.ImageColor3 = Color3.fromRGB(20,20,20)
 			DropdownForeground.Size = UDim2.new(1,0,1,0)
 			DropdownForeground.Parent = DropdownContainer
 
