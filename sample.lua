@@ -1,4 +1,3 @@
-
 local uis = game:GetService("UserInputService")
 local players = game:GetService("Players")
 local ws = game:GetService("Workspace")
@@ -291,71 +290,71 @@ end
 local http_service = game:GetService("HttpService")
 
 function library:config_list_update()
-    if not library.config_holder then
-        return
-    end
+	if not library.config_holder then
+		return
+	end
 
-    local list = {}
-    local config_path = library.directory .. "/configs"
+	local list = {}
+	local config_path = library.directory .. "/configs"
 
-    if not isfolder(config_path) then
-        makefolder(config_path)
-    end
+	if not isfolder(config_path) then
+		makefolder(config_path)
+	end
 
-    for _, file in next, listfiles(config_path) do
-        local normalized = file:gsub("\\", "/")
-        local parts = normalized:split("/")
-        local filename = parts[#parts]
-        
-        if filename:sub(-4) == ".cfg" then
-            local name = filename:sub(1, -5)
-            table.insert(list, name)
-        end
-    end
+	for _, file in next, listfiles(config_path) do
+		local normalized = file:gsub("\\", "/")
+		local parts = normalized:split("/")
+		local filename = parts[#parts]
 
-    library.config_holder:refresh_options(list)
+		if filename:sub(-4) == ".cfg" then
+			local name = filename:sub(1, -5)
+			table.insert(list, name)
+		end
+	end
+
+	library.config_holder:refresh_options(list)
 end
 
 function library:get_config()
-    local Config = {}
+	local Config = {}
 
-    for i, v in next, flags do
-        if type(v) == "table" and v.key then
-            Config[i] = { active = v.active, mode = v.mode, key = tostring(v.key) }
-        elseif type(v) == "table" and v.Transparency and v.Color then
-            local color_hex = "ffffff"
-            if typeof(v.Color) == "Color3" then
-                color_hex = v.Color:ToHex()
-            end
-            Config[i] = { Transparency = v.Transparency, Color = color_hex }
-        else
-            Config[i] = v
-        end
-    end
+	for i, v in next, flags do
+		if type(v) == "table" and v.key then
+			Config[i] = { active = v.active, mode = v.mode, key = tostring(v.key) }
+		elseif type(v) == "table" and v.Transparency and v.Color then
+			local color_hex = "ffffff"
+			if typeof(v.Color) == "Color3" then
+				color_hex = v.Color:ToHex()
+			end
+			Config[i] = { Transparency = v.Transparency, Color = color_hex }
+		else
+			Config[i] = v
+		end
+	end
 
-    return http_service:JSONEncode(Config)
+	return http_service:JSONEncode(Config)
 end
 
 function library:load_config(config_json)
-    local success, config = pcall(function() 
-        return http_service:JSONDecode(config_json) 
-    end)
-    
-    if not success then return end
+	local success, config = pcall(function() 
+		return http_service:JSONDecode(config_json) 
+	end)
 
-    for i, v in next, config do
-        local function_set = library.config_flags[i]
+	if not success then return end
 
-        if function_set then
-            if type(v) == "table" and v.Transparency and v.Color then
-                function_set(Color3.fromHex(v.Color), v.Transparency)
-            elseif type(v) == "table" and v.active ~= nil then
-                function_set(v)
-            else
-                function_set(v)
-            end
-        end
-    end
+	for i, v in next, config do
+		local function_set = library.config_flags[i]
+
+		if function_set then
+			if type(v) == "table" and v.Transparency and v.Color then
+				function_set(Color3.fromHex(v.Color), v.Transparency)
+			elseif type(v) == "table" and v.active ~= nil then
+				function_set(v)
+			else
+				function_set(v)
+			end
+		end
+	end
 end
 
 function library:round(number, float)
@@ -1451,6 +1450,7 @@ function library:window(properties)
 		BorderColor3 = Color3.fromRGB(8, 8, 8),
 		Size = UDim2.new(0, 358, 0, 328),
 		BackgroundColor3 = Color3.fromRGB(56, 56, 56),
+		Visible = false
 	})
 	library:make_resizable(playerlist)
 	table.insert(library.main_frame, playerlist)
@@ -3583,293 +3583,293 @@ function library:slider(properties)
 end
 
 function library:dropdown(properties)
-    local cfg = {
-        name = properties.name or nil,
-        flag = properties.flag or tostring(math.random(1, 9999999)),
-        items = properties.items or { "1", "2", "3" },
-        callback = properties.callback or function() end,
-        multi = properties.multi or false,
-        open = false,
-        option_instances = {},
-        multi_items = {},
-        previous_holder = self,
-    }
-    cfg.default = properties.default or (cfg.multi and { cfg.items[1] }) or cfg.items[1] or nil
+	local cfg = {
+		name = properties.name or nil,
+		flag = properties.flag or tostring(math.random(1, 9999999)),
+		items = properties.items or { "1", "2", "3" },
+		callback = properties.callback or function() end,
+		multi = properties.multi or false,
+		open = false,
+		option_instances = {},
+		multi_items = {},
+		previous_holder = self,
+	}
+	cfg.default = properties.default or (cfg.multi and { cfg.items[1] }) or cfg.items[1] or nil
 
-    local bottom_components
-    local object
-    if cfg.name then
-        object = library:create("TextLabel", {
-            Parent = self.holder,
-            Name = "",
-            FontFace = library.font,
-            TextColor3 = Color3.fromRGB(170, 170, 170),
-            BorderColor3 = Color3.fromRGB(0, 0, 0),
-            Text = cfg.name,
-            TextStrokeTransparency = 0.5,
-            Size = UDim2.new(1, -26, 0, 12),
-            BorderSizePixel = 0,
-            ZIndex = 2,
-            BackgroundTransparency = 1,
-            TextXAlignment = Enum.TextXAlignment.Left,
-            AutomaticSize = Enum.AutomaticSize.Y,
-            TextYAlignment = Enum.TextYAlignment.Top,
-            TextSize = 12,
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        })
+	local bottom_components
+	local object
+	if cfg.name then
+		object = library:create("TextLabel", {
+			Parent = self.holder,
+			Name = "",
+			FontFace = library.font,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			Text = cfg.name,
+			TextStrokeTransparency = 0.5,
+			Size = UDim2.new(1, -26, 0, 12),
+			BorderSizePixel = 0,
+			ZIndex = 2,
+			BackgroundTransparency = 1,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			AutomaticSize = Enum.AutomaticSize.Y,
+			TextYAlignment = Enum.TextYAlignment.Top,
+			TextSize = 12,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		})
 
-        bottom_components = library:create("Frame", {
-            Parent = object,
-            Name = "",
-            Visible = true,
-            Position = UDim2.new(0, 0, 0, 13),
-            BorderColor3 = Color3.fromRGB(0, 0, 0),
-            Size = UDim2.new(1, 26, 0, 0),
-            BorderSizePixel = 0,
-            BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-        })
+		bottom_components = library:create("Frame", {
+			Parent = object,
+			Name = "",
+			Visible = true,
+			Position = UDim2.new(0, 0, 0, 13),
+			BorderColor3 = Color3.fromRGB(0, 0, 0),
+			Size = UDim2.new(1, 26, 0, 0),
+			BorderSizePixel = 0,
+			BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		})
 
-        local list = library:create("UIListLayout", {
-            Parent = bottom_components,
-            Name = "",
-            Padding = UDim.new(0, 4),
-            SortOrder = Enum.SortOrder.LayoutOrder,
-        })
-    else
-        self.bottom_holder.Parent.AutomaticSize = Enum.AutomaticSize.Y
-        self.bottom_holder.Parent.TextYAlignment = Enum.TextYAlignment.Top
-    end
+		local list = library:create("UIListLayout", {
+			Parent = bottom_components,
+			Name = "",
+			Padding = UDim.new(0, 4),
+			SortOrder = Enum.SortOrder.LayoutOrder,
+		})
+	else
+		self.bottom_holder.Parent.AutomaticSize = Enum.AutomaticSize.Y
+		self.bottom_holder.Parent.TextYAlignment = Enum.TextYAlignment.Top
+	end
 
-    local dropdown_inline = library:create("Frame", {
-        Parent = cfg.name and bottom_components or self.bottom_holder,
-        Name = "",
-        Position = UDim2.new(0, -15, 0, 2),
-        BorderColor3 = Color3.fromRGB(19, 19, 19),
-        Size = UDim2.new(1, -26, 0, 16),
-        BorderSizePixel = 0,
-        BackgroundColor3 = Color3.fromRGB(8, 8, 8),
-    })
+	local dropdown_inline = library:create("Frame", {
+		Parent = cfg.name and bottom_components or self.bottom_holder,
+		Name = "",
+		Position = UDim2.new(0, -15, 0, 2),
+		BorderColor3 = Color3.fromRGB(19, 19, 19),
+		Size = UDim2.new(1, -26, 0, 16),
+		BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+	})
 
-    local dropdown = library:create("TextButton", {
-        Parent = dropdown_inline,
-        Name = "",
-        FontFace = library.font,
-        TextColor3 = Color3.fromRGB(170, 170, 170),
-        BorderColor3 = Color3.fromRGB(56, 56, 56),
-        Text = "",
-        TextStrokeTransparency = 0.5,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        Size = UDim2.new(1, -4, 1, -4),
-        Position = UDim2.new(0, 2, 0, 2),
-        TextSize = 12,
-        BackgroundColor3 = Color3.fromRGB(38, 38, 38),
-    })
+	local dropdown = library:create("TextButton", {
+		Parent = dropdown_inline,
+		Name = "",
+		FontFace = library.font,
+		TextColor3 = Color3.fromRGB(170, 170, 170),
+		BorderColor3 = Color3.fromRGB(56, 56, 56),
+		Text = "",
+		TextStrokeTransparency = 0.5,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Size = UDim2.new(1, -4, 1, -4),
+		Position = UDim2.new(0, 2, 0, 2),
+		TextSize = 12,
+		BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+	})
 
-    local UIPadding = library:create("UIPadding", {
-        Parent = dropdown,
-        Name = "",
-        PaddingLeft = UDim.new(0, 5),
-    })
+	local UIPadding = library:create("UIPadding", {
+		Parent = dropdown,
+		Name = "",
+		PaddingLeft = UDim.new(0, 5),
+	})
 
-    local icon = library:create("TextLabel", {
-        Parent = dropdown,
-        Name = "",
-        FontFace = library.font,
-        TextColor3 = Color3.fromRGB(170, 170, 170),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Text = "+",
-        TextStrokeTransparency = 0.5,
-        Size = UDim2.new(0, 1, 1, 0),
-        BackgroundTransparency = 1,
-        TextXAlignment = Enum.TextXAlignment.Right,
-        Position = UDim2.new(1, -6, 0, -1),
-        BorderSizePixel = 0,
-        TextSize = 8,
-        BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    })
+	local icon = library:create("TextLabel", {
+		Parent = dropdown,
+		Name = "",
+		FontFace = library.font,
+		TextColor3 = Color3.fromRGB(170, 170, 170),
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		Text = "+",
+		TextStrokeTransparency = 0.5,
+		Size = UDim2.new(0, 1, 1, 0),
+		BackgroundTransparency = 1,
+		TextXAlignment = Enum.TextXAlignment.Right,
+		Position = UDim2.new(1, -6, 0, -1),
+		BorderSizePixel = 0,
+		TextSize = 8,
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+	})
 
-    local content_inline = library:create("Frame", {
-        Parent = library.gui,
-        Name = "",
-        BorderColor3 = Color3.fromRGB(19, 19, 19),
-        Size = UDim2.new(0, dropdown_inline.AbsoluteSize.X, 0, 0),
-        Position = UDim2.new(
-            0,
-            dropdown_inline.AbsolutePosition.X,
-            0,
-            dropdown_inline.AbsolutePosition.Y + dropdown_inline.AbsoluteSize.Y + 2
-        ),
-        BorderSizePixel = 0,
-        ZIndex = 5,
-        Visible = false,
-        AutomaticSize = Enum.AutomaticSize.Y,
-        BackgroundColor3 = Color3.fromRGB(8, 8, 8),
-    })
+	local content_inline = library:create("Frame", {
+		Parent = library.gui,
+		Name = "",
+		BorderColor3 = Color3.fromRGB(19, 19, 19),
+		Size = UDim2.new(0, dropdown_inline.AbsoluteSize.X, 0, 0),
+		Position = UDim2.new(
+			0,
+			dropdown_inline.AbsolutePosition.X,
+			0,
+			dropdown_inline.AbsolutePosition.Y + dropdown_inline.AbsoluteSize.Y + 2
+		),
+		BorderSizePixel = 0,
+		ZIndex = 5,
+		Visible = false,
+		AutomaticSize = Enum.AutomaticSize.Y,
+		BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+	})
 
-    dropdown_inline:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
-        content_inline.Position = UDim2.new(
-            0,
-            dropdown_inline.AbsolutePosition.X,
-            0,
-            dropdown_inline.AbsolutePosition.Y + dropdown_inline.AbsoluteSize.Y + 2
-        )
-    end)
+	dropdown_inline:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+		content_inline.Position = UDim2.new(
+			0,
+			dropdown_inline.AbsolutePosition.X,
+			0,
+			dropdown_inline.AbsolutePosition.Y + dropdown_inline.AbsoluteSize.Y + 2
+		)
+	end)
 
-    dropdown_inline:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
-        content_inline.Size = UDim2.new(0, dropdown_inline.AbsoluteSize.X, 0, 0)
-    end)
+	dropdown_inline:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+		content_inline.Size = UDim2.new(0, dropdown_inline.AbsoluteSize.X, 0, 0)
+	end)
 
-    local content = library:create("Frame", {
-        Parent = content_inline,
-        Name = "",
-        Position = UDim2.new(0, 2, 0, 2),
-        BorderColor3 = Color3.fromRGB(56, 56, 56),
-        Size = UDim2.new(1, -4, 1, -4),
-        BackgroundColor3 = Color3.fromRGB(38, 38, 38),
-    })
+	local content = library:create("Frame", {
+		Parent = content_inline,
+		Name = "",
+		Position = UDim2.new(0, 2, 0, 2),
+		BorderColor3 = Color3.fromRGB(56, 56, 56),
+		Size = UDim2.new(1, -4, 1, -4),
+		BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+	})
 
-    local options = library:create("Frame", {
-        Parent = content,
-        Name = "",
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 2, 0, 2),
-        BorderColor3 = Color3.fromRGB(0, 0, 0),
-        Size = UDim2.new(1, -4, 1, -4),
-        BorderSizePixel = 0,
-        BackgroundColor3 = Color3.fromRGB(50, 50, 50),
-    })
+	local options = library:create("Frame", {
+		Parent = content,
+		Name = "",
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, 2, 0, 2),
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		Size = UDim2.new(1, -4, 1, -4),
+		BorderSizePixel = 0,
+		BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+	})
 
-    local UIListLayout = library:create("UIListLayout", {
-        Parent = options,
-        Name = "",
-        Padding = UDim.new(0, 2),
-        SortOrder = Enum.SortOrder.LayoutOrder,
-    })
+	local UIListLayout = library:create("UIListLayout", {
+		Parent = options,
+		Name = "",
+		Padding = UDim.new(0, 2),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+	})
 
-    local UIPadding = library:create("UIPadding", {
-        Parent = options,
-        Name = "",
-        PaddingBottom = UDim.new(0, 4),
-    })
+	local UIPadding = library:create("UIPadding", {
+		Parent = options,
+		Name = "",
+		PaddingBottom = UDim.new(0, 4),
+	})
 
-    function cfg.set_visible(bool)
-        content_inline.Visible = bool
-        icon.Text = bool and "-" or "+"
-        icon.TextSize = bool and 12 or 8
+	function cfg.set_visible(bool)
+		content_inline.Visible = bool
+		icon.Text = bool and "-" or "+"
+		icon.TextSize = bool and 12 or 8
 
-        if cfg.name then
-            object.ZIndex = bool and 9999 or 3
-        end
+		if cfg.name then
+			object.ZIndex = bool and 9999 or 3
+		end
 
-        if bool then
-            if library.current_element_open and library.current_element_open ~= cfg then
-                library.current_element_open.set_visible(false)
-                library.current_element_open.open = false
-            end
-            library.current_element_open = cfg
-        end
-    end
+		if bool then
+			if library.current_element_open and library.current_element_open ~= cfg then
+				library.current_element_open.set_visible(false)
+				library.current_element_open.open = false
+			end
+			library.current_element_open = cfg
+		end
+	end
 
-    function cfg.set(value)
-        local selected = {}
-        local is_table = type(value) == "table"
+	function cfg.set(value)
+		local selected = {}
+		local is_table = type(value) == "table"
 
-        for _, v in next, cfg.option_instances do
-            local match = false
-            if is_table then
-                for _, val in next, value do
-                    if v.Text == tostring(val) then
-                        match = true
-                        break
-                    end
-                end
-            elseif v.Text == tostring(value) then
-                match = true
-            end
+		for _, v in next, cfg.option_instances do
+			local match = false
+			if is_table then
+				for _, val in next, value do
+					if v.Text == tostring(val) then
+						match = true
+						break
+					end
+				end
+			elseif v.Text == tostring(value) then
+				match = true
+			end
 
-            if match then
-                table.insert(selected, v.Text)
-                v.BackgroundTransparency = 0
-            else
-                v.BackgroundTransparency = 1
-            end
-        end
+			if match then
+				table.insert(selected, v.Text)
+				v.BackgroundTransparency = 0
+			else
+				v.BackgroundTransparency = 1
+			end
+		end
 
-        cfg.multi_items = selected
-        dropdown.Text = table.concat(selected, ", ")
-        flags[cfg.flag] = cfg.multi and selected or selected[1]
-        cfg.callback(flags[cfg.flag])
-    end
+		cfg.multi_items = selected
+		dropdown.Text = table.concat(selected, ", ")
+		flags[cfg.flag] = cfg.multi and selected or selected[1]
+		cfg.callback(flags[cfg.flag])
+	end
 
-    function cfg:refresh_options(refreshed_list)
-        for _, v in next, cfg.option_instances do
-            v:Destroy()
-        end
-        cfg.option_instances = {}
-        cfg.items = refreshed_list
+	function cfg:refresh_options(refreshed_list)
+		for _, v in next, cfg.option_instances do
+			v:Destroy()
+		end
+		cfg.option_instances = {}
+		cfg.items = refreshed_list
 
-        for i, v in next, refreshed_list do
-            local op = library:create("TextButton", {
-                Parent = options,
-                Name = "",
-                FontFace = library.font,
-                TextColor3 = Color3.fromRGB(170, 170, 170),
-                BorderColor3 = Color3.fromRGB(56, 56, 56),
-                Text = tostring(v),
-                BackgroundTransparency = 1,
-                TextStrokeTransparency = 0.5,
-                Size = UDim2.new(1, 0, 0, 14),
-                TextXAlignment = Enum.TextXAlignment.Left,
-                Position = UDim2.new(0, 2, 0, 2),
-                BorderSizePixel = 0,
-                TextSize = 12,
-                BackgroundColor3 = Color3.fromRGB(65, 65, 65),
-            })
+		for i, v in next, refreshed_list do
+			local op = library:create("TextButton", {
+				Parent = options,
+				Name = "",
+				FontFace = library.font,
+				TextColor3 = Color3.fromRGB(170, 170, 170),
+				BorderColor3 = Color3.fromRGB(56, 56, 56),
+				Text = tostring(v),
+				BackgroundTransparency = 1,
+				TextStrokeTransparency = 0.5,
+				Size = UDim2.new(1, 0, 0, 14),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				Position = UDim2.new(0, 2, 0, 2),
+				BorderSizePixel = 0,
+				TextSize = 12,
+				BackgroundColor3 = Color3.fromRGB(65, 65, 65),
+			})
 
-            library:create("UIPadding", {
-                Parent = op,
-                Name = "",
-                PaddingLeft = UDim.new(0, 5),
-            })
+			library:create("UIPadding", {
+				Parent = op,
+				Name = "",
+				PaddingLeft = UDim.new(0, 5),
+			})
 
-            table.insert(cfg.option_instances, op)
+			table.insert(cfg.option_instances, op)
 
-            op.MouseButton1Down:Connect(function()
-                if cfg.multi then
-                    local selected_index = table.find(cfg.multi_items, op.Text)
-                    if selected_index then
-                        table.remove(cfg.multi_items, selected_index)
-                    else
-                        table.insert(cfg.multi_items, op.Text)
-                    end
-                    cfg.set(cfg.multi_items)
-                else
-                    cfg.set(op.Text)
-                    cfg.set_visible(false)
-                    cfg.open = false
-                end
-            end)
-        end
-    end
+			op.MouseButton1Down:Connect(function()
+				if cfg.multi then
+					local selected_index = table.find(cfg.multi_items, op.Text)
+					if selected_index then
+						table.remove(cfg.multi_items, selected_index)
+					else
+						table.insert(cfg.multi_items, op.Text)
+					end
+					cfg.set(cfg.multi_items)
+				else
+					cfg.set(op.Text)
+					cfg.set_visible(false)
+					cfg.open = false
+				end
+			end)
+		end
+	end
 
-    function cfg:list(new_list)
-        cfg:refresh_options(new_list)
-        local current = flags[cfg.flag]
-        if current then
-            cfg.set(current)
-        end
-    end
+	function cfg:list(new_list)
+		cfg:refresh_options(new_list)
+		local current = flags[cfg.flag]
+		if current then
+			cfg.set(current)
+		end
+	end
 
-    dropdown.MouseButton1Click:Connect(function()
-        cfg.open = not cfg.open
-        cfg.set_visible(cfg.open)
-    end)
+	dropdown.MouseButton1Click:Connect(function()
+		cfg.open = not cfg.open
+		cfg.set_visible(cfg.open)
+	end)
 
-    cfg:refresh_options(cfg.items)
-    cfg.set(cfg.default)
-    library.config_flags[cfg.flag] = cfg.set
+	cfg:refresh_options(cfg.items)
+	cfg.set(cfg.default)
+	library.config_flags[cfg.flag] = cfg.set
 
-    return setmetatable(cfg, library)
+	return setmetatable(cfg, library)
 end
 
 function library:colorpicker(properties)
@@ -4498,20 +4498,20 @@ function library:colorpicker(properties)
 				1
 			)
 			v = 1
-				- math.clamp(
-					(vec2(mouse.X, mouse.Y - gui_offset) - sat_black.AbsolutePosition).Y / sat_black.AbsoluteSize.Y,
-					0,
-					1
-				)
+			- math.clamp(
+				(vec2(mouse.X, mouse.Y - gui_offset) - sat_black.AbsolutePosition).Y / sat_black.AbsoluteSize.Y,
+				0,
+				1
+			)
 		elseif dragging_hue then
 			h = 1
-				- math.clamp(
-					1
-						- (vec2(mouse.X, mouse.Y - gui_offset) - hue_inline.AbsolutePosition).X
-							/ hue_inline.AbsoluteSize.X,
-					0,
-					1
-				)
+			- math.clamp(
+				1
+				- (vec2(mouse.X, mouse.Y - gui_offset) - hue_inline.AbsolutePosition).X
+					/ hue_inline.AbsoluteSize.X,
+				0,
+				1
+			)
 		elseif dragging_alpha then
 			a = math.clamp(
 				(vec2(mouse.X, mouse.Y - gui_offset) - alpha_inline.AbsolutePosition).X / alpha_inline.AbsoluteSize.X,
