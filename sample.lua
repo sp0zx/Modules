@@ -30,9 +30,7 @@ local max = math.max
 local floor = math.floor
 local min = math.min
 local abs = math.abs
-if getgenv().library then
-	getgenv().library:unload()
-end
+
 getgenv().library = {
 	flags = {},
 	config_flags = {},
